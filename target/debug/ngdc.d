@@ -1,1 +1,1 @@
-/home/bsmartin/ngdc/target/debug/ngdc: /home/bsmartin/ngdc/src/main.rs
+/home/miriam/Documents/ngdc/target/debug/ngdc: /home/miriam/Documents/ngdc/src/main.rs
