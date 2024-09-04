@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::env;
-use std::fs::{self, File};
-use std::io::{self, BufRead, Write};
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
 use std::path::Path;
 
-fn main() -> io::Result<()> {
+fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <filename>", args[0]);
@@ -57,15 +57,16 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn read_file(filename: &str) -> io::Result<String> {
+fn read_file(filename: &str) -> std::io::Result<String> {
     let path = Path::new(filename);
     let file = File::open(&path)?;
     let mut content = String::new();
-    io::BufReader::new(file).read_to_string(&mut content)?;
+    let mut reader = BufReader::new(file);
+    reader.read_to_string(&mut content)?;
     Ok(content)
 }
 
-fn write_file(filename: &str, content: &str) -> io::Result<()> {
+fn write_file(filename: &str, content: &str) -> std::io::Result<()> {
     let path = Path::new(filename);
     let mut file = File::create(&path)?;
     file.write_all(content.as_bytes())?;
