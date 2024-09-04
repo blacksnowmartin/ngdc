@@ -1,52 +1,83 @@
-use std::io::{self, Write};
+use std::collections::HashMap;
+use std::env;
+use std::fs::{self, File};
+use std::io::{self, BufRead, Write};
+use std::path::Path;
 
-fn main() {
-    // Prompt the user for a number
-    print!("Enter a positive integer: ");
-    io::stdout().flush().expect("Failed to flush stdout");
+fn main() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        eprintln!("Usage: {} <filename>", args[0]);
+        std::process::exit(1);
+    }
+    
+    let filename = &args[1];
+    
+    let content = read_file(filename)?;
+    
+    // Functionality 1: Count lines
+    let line_count = content.lines().count();
+    println!("Number of lines: {}", line_count);
 
-    // Read the input from the user
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read line");
+    // Functionality 2: Count words
+    let word_count = content.split_whitespace().count();
+    println!("Number of words: {}", word_count);
 
-    // Parse the input to a u64 (unsigned 64-bit integer)
-    let number: u64 = match input.trim().parse() {
-        Ok(num) => num,
-        Err(_) => {
-            eprintln!("Invalid input. Please enter a valid positive integer.");
-            return;
-        }
-    };
+    // Functionality 3: Count characters
+    let char_count = content.chars().count();
+    println!("Number of characters: {}", char_count);
 
-    // Check if the number is non-negative
-    if number == 0 {
-        println!("You entered 0!");
-        println!("The factorial of 0 is 1, which is a special case in math.");
-        println!("The Fibonacci sequence starts with 0, so the Fibonacci number of 0 is 0.");
+    // Functionality 4: Most common word
+    let most_common_word = most_common_word(&content);
+    println!("Most common word: {:?}", most_common_word);
+
+    // Functionality 5: Reverse content
+    let reversed_content = content.chars().rev().collect::<String>();
+    write_file("reversed.txt", &reversed_content)?;
+
+    // Functionality 6: Convert to uppercase
+    let uppercase_content = content.to_uppercase();
+    write_file("uppercase.txt", &uppercase_content)?;
+
+    // Functionality 7: Convert to lowercase
+    let lowercase_content = content.to_lowercase();
+    write_file("lowercase.txt", &lowercase_content)?;
+
+    // Functionality 8: Replace word
+    if args.len() == 4 {
+        let old_word = &args[2];
+        let new_word = &args[3];
+        let replaced_content = content.replace(old_word, new_word);
+        write_file("replaced.txt", &replaced_content)?;
     } else {
-        // Compute and output the factorial
-        let result_factorial = factorial(number);
-        println!("You entered {}!", number);
-        println!("The factorial of {} ({}!) is equal to {}.", number, number, result_factorial);
-        println!("To put it simply, {}! means multiplying all whole numbers from {} down to 1.", number, number);
-
-        // Compute and output the Fibonacci number
-        let result_fibonacci = fibonacci(number);
-        println!("The Fibonacci sequence is a series of numbers where a number is the sum of the two preceding ones, usually starting with 0 and 1.");
-        println!("The Fibonacci number at position {} in the sequence is {}.", number, result_fibonacci);
+        eprintln!("Usage: {} <filename> <old_word> <new_word>", args[0]);
+        std::process::exit(1);
     }
+
+    Ok(())
 }
 
-// Function to compute the factorial of a number
-fn factorial(n: u64) -> u64 {
-    (1..=n).product()
+fn read_file(filename: &str) -> io::Result<String> {
+    let path = Path::new(filename);
+    let file = File::open(&path)?;
+    let mut content = String::new();
+    io::BufReader::new(file).read_to_string(&mut content)?;
+    Ok(content)
 }
 
-// Function to compute the Fibonacci number of a given number
-fn fibonacci(n: u64) -> u64 {
-    match n {
-        0 => 0,
-        1 => 1,
-        _ => fibonacci(n - 1) + fibonacci(n - 2),
+fn write_file(filename: &str, content: &str) -> io::Result<()> {
+    let path = Path::new(filename);
+    let mut file = File::create(&path)?;
+    file.write_all(content.as_bytes())?;
+    Ok(())
+}
+
+fn most_common_word(content: &str) -> Option<String> {
+    let mut word_counts = HashMap::new();
+    for word in content.split_whitespace() {
+        let count = word_counts.entry(word.to_string()).or_insert(0);
+        *count += 1;
     }
+
+    word_counts.into_iter().max_by_key(|&(_, count)| count).map(|(word, _)| word)
 }
